@@ -66,17 +66,30 @@ const Home = () => {
 	return (
 		<div>
 			<div className="nav-bar">
-				<motion.h1
-					className="text-4xl font-bold text-gradient  "
-					initial={{ opacity: 0, y: -20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.8, ease: 'easeOut' }}
-					style={{
-						textShadow: '0px 4px 6px rgba(0, 0, 0, 0.3)',
-					}}
-				>
-					Welcome to Mind-Bloom
-				</motion.h1>
+				<div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+					<div className="logo">
+						<img
+							src="/h-icon.png"
+							alt="Mind-Bloom Logo"
+							style={{
+								// width: '50px',
+								height: '40px',
+								// boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.3)',
+							}}
+						/>
+					</div>
+					<motion.h1
+						className="text-4xl font-bold text-gradient  "
+						initial={{ opacity: 0, y: -20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.8, ease: 'easeOut' }}
+						style={{
+							textShadow: '0px 4px 6px rgba(0, 0, 0, 0.3)',
+						}}
+					>
+						Welcome to Mind-Bloom
+					</motion.h1>
+				</div>
 				<div className="flex items-center gap-4">
 					<Link to="/calendar">
 						<Button variant="outline" className="flex items-center gap-2">

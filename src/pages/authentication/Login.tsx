@@ -321,7 +321,24 @@ const Login = () => {
 
 	return (
 		<div>
-			<div className="nav-bar">
+			<div
+				className="nav-bar"
+				style={{
+					display: 'flex',
+					alignItems: 'start',
+					gap: '20px',
+					justifyContent: 'start',
+				}}
+			>
+				<div className="logo">
+					<img
+						src="/log-icon.png"
+						alt="Mind-Bloom Logo"
+						style={{
+							height: '40px',
+						}}
+					/>
+				</div>
 				<motion.h1
 					className="text-4xl font-bold text-gradient"
 					initial={{ opacity: 0, y: -20 }}
@@ -331,7 +348,7 @@ const Login = () => {
 						textShadow: '0px 4px 6px rgba(0, 0, 0, 0.3)',
 					}}
 				>
-					Welcome to Mind-Bloom
+					Mind-Bloom
 				</motion.h1>
 			</div>
 			<div
