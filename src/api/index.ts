@@ -1,7 +1,6 @@
 // src/api/index.ts
 
-// API URL (defaults to localhost if not provided in environment)
-// const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787/api';
+// API URL (use environment variable or fallback to deployed backend)
 const API_URL = import.meta.env.VITE_API_URL;
 
 // Log the API URL on startup
@@ -29,6 +28,7 @@ const handleResponse = async (response: Response) => {
 			const errorData = await response.json();
 			errorMessage = errorData.error || errorMessage;
 		} catch (e) {
+			console.log('Error parsing JSON:', e);
 			// If not JSON, try to get error as text
 			try {
 				const errorText = await response.text();
@@ -36,6 +36,7 @@ const handleResponse = async (response: Response) => {
 					errorMessage = errorText;
 				}
 			} catch (textError) {
+				console.log('Error getting text:', textError);
 				// If we can't get text either, use the default error message
 			}
 		}
@@ -86,8 +87,12 @@ export const authAPI = {
 		const data = await handleResponse(response);
 
 		// Store the token in local storage for future requests
-		localStorage.setItem('token', data.token);
-		console.log('User logged in successfully, token saved');
+		if (data.token) {
+			localStorage.setItem('token', data.token);
+			console.log('User logged in successfully, token saved');
+		} else {
+			console.error('Login response did not include a token');
+		}
 
 		return data;
 	},
@@ -121,12 +126,17 @@ export const journalAPI = {
 	getAllEntries: async (): Promise<any[]> => {
 		console.log('Fetching all journal entries');
 
-		const response = await fetch(`${API_URL}/journal`, {
-			method: 'GET',
-			headers: getAuthHeader(),
-		});
+		try {
+			const response = await fetch(`${API_URL}/journal`, {
+				method: 'GET',
+				headers: getAuthHeader(),
+			});
 
-		return handleResponse(response);
+			return handleResponse(response);
+		} catch (error) {
+			console.error('Error fetching journal entries:', error);
+			return [];
+		}
 	},
 
 	// Get a specific journal entry
@@ -145,12 +155,17 @@ export const journalAPI = {
 	getEntriesByDate: async (date: string): Promise<any[]> => {
 		console.log('Fetching journal entries for date:', date);
 
-		const response = await fetch(`${API_URL}/journal/date/${date}`, {
-			method: 'GET',
-			headers: getAuthHeader(),
-		});
+		try {
+			const response = await fetch(`${API_URL}/journal/date/${date}`, {
+				method: 'GET',
+				headers: getAuthHeader(),
+			});
 
-		return handleResponse(response);
+			return handleResponse(response);
+		} catch (error) {
+			console.error('Error fetching journal entries by date:', error);
+			return [];
+		}
 	},
 };
 
