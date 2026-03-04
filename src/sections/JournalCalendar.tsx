@@ -1,382 +1,9 @@
-// import { Button } from '@/components/ui/button';
-// import { Calendar } from '@/components/ui/calendar';
-// import {
-// 	Dialog,
-// 	DialogContent,
-// 	DialogDescription,
-// 	DialogHeader,
-// 	DialogTitle,
-// } from '@/components/ui/dialog';
-// import { format } from 'date-fns';
-// import { useEffect, useState } from 'react';
-// import { journalAPI } from '../api';
-
-// interface JournalEntry {
-// 	id: number;
-// 	content: string;
-// 	mood: string;
-// 	entry_date: string;
-// 	affirmation_content: string | null;
-// }
-
-// // Helper function to format date as YYYY-MM-DD
-// const formatDateForAPI = (date: Date): string => {
-// 	return format(date, 'yyyy-MM-dd');
-// };
-
-// export default function JournalCalendar() {
-// 	const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-// 		new Date()
-// 	);
-// 	const [entriesByDate, setEntriesByDate] = useState<
-// 		Record<string, JournalEntry[]>
-// 	>({});
-// 	const [isLoading, setIsLoading] = useState<boolean>(true);
-// 	const [selectedEntries, setSelectedEntries] = useState<JournalEntry[]>([]);
-// 	const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-// 	const [error, setError] = useState<string | null>(null);
-// 	const [highlightedDates, setHighlightedDates] = useState<Date[]>([]);
-// 	const [lastSelectedDate, setLastSelectedDate] = useState<string>('');
-
-// 	// Get all entries on component mount
-// 	useEffect(() => {
-// 		fetchAllEntries();
-// 	}, []);
-
-// 	// Fetch all journal entries for the user
-// 	const fetchAllEntries = async () => {
-// 		setIsLoading(true);
-// 		setError(null);
-
-// 		try {
-// 			const entries = await journalAPI.getAllEntries();
-// 			console.log('API Response:', entries); // Debug: Log the actual API response
-
-// 			// If entries is undefined or not an array, handle the error
-// 			if (!entries || !Array.isArray(entries)) {
-// 				console.error('API did not return an array of entries:', entries);
-// 				setError('Failed to fetch journal entries: Invalid response format');
-// 				setIsLoading(false);
-// 				return;
-// 			}
-
-// 			// Group entries by date
-// 			const groupedEntries: Record<string, JournalEntry[]> = {};
-// 			const datesToHighlight: Date[] = [];
-
-// 			entries.forEach((entry: any) => {
-// 				// Safely extract date from entry
-// 				let dateStr = '';
-// 				if (entry.entry_date) {
-// 					dateStr = entry.entry_date.split('T')[0]; // Use entry_date if available
-// 				} else if (entry.created_at) {
-// 					dateStr = entry.created_at.split('T')[0]; // Try created_at as fallback
-// 				} else if (entry.createdAt) {
-// 					dateStr = entry.createdAt.split('T')[0]; // Try createdAt as another fallback
-// 				} else {
-// 					// If no date field is found, use current date as fallback
-// 					dateStr = new Date().toISOString().split('T')[0];
-// 					console.warn('No date field found for entry:', entry);
-// 				}
-
-// 				// Create a standardized entry object
-// 				const standardizedEntry: JournalEntry = {
-// 					id: entry.id,
-// 					content: entry.content || '',
-// 					mood: entry.mood || '',
-// 					entry_date: dateStr,
-// 					affirmation_content: entry.affirmation_content || null,
-// 				};
-
-// 				if (!groupedEntries[dateStr]) {
-// 					groupedEntries[dateStr] = [];
-// 					// Create a date object for the calendar highlighting
-// 					// Use noon time to avoid timezone issues
-// 					const highlightDate = new Date(dateStr + 'T12:00:00');
-// 					datesToHighlight.push(highlightDate);
-// 				}
-// 				groupedEntries[dateStr].push(standardizedEntry);
-// 			});
-
-// 			setEntriesByDate(groupedEntries);
-// 			setHighlightedDates(datesToHighlight);
-// 			console.log(
-// 				'Dates to highlight:',
-// 				datesToHighlight.map((d) => formatDateForAPI(d))
-// 			);
-
-// 			// After loading entries, check if selectedDate has entries and open dialog
-// 			if (selectedDate) {
-// 				const formattedDate = formatDateForAPI(selectedDate);
-// 				const entriesForDate = groupedEntries[formattedDate];
-// 				if (entriesForDate) {
-// 					setSelectedEntries(entriesForDate);
-// 					setIsDialogOpen(true);
-// 					setLastSelectedDate(formattedDate);
-// 				}
-// 			}
-// 		} catch (error) {
-// 			console.error('Error in fetchAllEntries:', error);
-// 			setError(
-// 				error instanceof Error
-// 					? error.message
-// 					: 'Failed to fetch journal entries'
-// 			);
-// 		} finally {
-// 			setIsLoading(false);
-// 		}
-// 	};
-
-// 	// Handle date selection
-// 	const handleDateSelect = async (date: Date | undefined) => {
-// 		if (!date) return;
-// 		// fetchAllEntries(); // Fetch all entries again to ensure we have the latest data
-
-// 		const formattedDate = formatDateForAPI(date);
-// 		console.log(
-// 			'Selected date:',
-// 			formattedDate,
-// 			'Last selected:',
-// 			lastSelectedDate
-// 		);
-
-// 		// Always update the selected date
-// 		setSelectedDate(date);
-
-// 		// If selecting the same date again, just open the dialog with existing entries
-// 		if (formattedDate === lastSelectedDate && !isDialogOpen) {
-// 			console.log('Re-selected same date, reopening dialog');
-
-// 			fetchAllEntries(); // Fetch all entries again to ensure we have the latest data
-
-// 			setIsDialogOpen(true);
-// 			return;
-// 		}
-
-// 		// Update the last selected date
-// 		setLastSelectedDate(formattedDate);
-
-// 		// If we already have entries for this date, use them
-// 		if (entriesByDate[formattedDate]) {
-// 			console.log('Using cached entries for date:', formattedDate);
-// 			setSelectedEntries(entriesByDate[formattedDate]);
-// 			fetchAllEntries();
-// 			setIsDialogOpen(true);
-// 			return;
-// 		}
-
-// 		// Otherwise, fetch entries for this date
-// 		setIsLoading(true);
-// 		setError(null);
-
-// 		try {
-// 			const entries = await journalAPI.getEntriesByDate(formattedDate);
-// 			console.log('Date entries response:', entries); // Debug: Log the response
-
-// 			// If no entries or invalid response, handle gracefully
-// 			if (!entries || !Array.isArray(entries)) {
-// 				setSelectedEntries([]);
-// 				setIsDialogOpen(true);
-// 				setIsLoading(false);
-// 				return;
-// 			}
-
-// 			// Standardize entries
-// 			const standardizedEntries: JournalEntry[] = entries.map((entry: any) => {
-// 				// Determine the date string
-// 				let dateStr = '';
-// 				if (entry.entry_date) {
-// 					dateStr = entry.entry_date.split('T')[0];
-// 				} else if (entry.created_at) {
-// 					dateStr = entry.created_at.split('T')[0];
-// 				} else if (entry.createdAt) {
-// 					dateStr = entry.createdAt.split('T')[0];
-// 				} else {
-// 					dateStr = formattedDate;
-// 				}
-
-// 				return {
-// 					id: entry.id,
-// 					content: entry.content || '',
-// 					mood: entry.mood || '',
-// 					entry_date: dateStr,
-// 					affirmation_content: entry.affirmation_content || null,
-// 				};
-// 			});
-
-// 			// If we found entries, add this date to highlighted dates
-// 			if (standardizedEntries.length > 0) {
-// 				// Create a date object for the calendar highlighting
-// 				const highlightDate = new Date(formattedDate + 'T12:00:00');
-// 				setHighlightedDates((prev) => {
-// 					// Check if the date is already in the array to avoid duplicates
-// 					if (!prev.some((d) => formatDateForAPI(d) === formattedDate)) {
-// 						return [...prev, highlightDate];
-// 					}
-// 					return prev;
-// 				});
-// 			}
-
-// 			// Update entries by date
-// 			setEntriesByDate((prev) => ({
-// 				...prev,
-// 				[formattedDate]: standardizedEntries,
-// 			}));
-
-// 			setSelectedEntries(standardizedEntries);
-// 			setIsDialogOpen(true);
-// 		} catch (error) {
-// 			console.error('Error in handleDateSelect:', error);
-// 			setError(
-// 				error instanceof Error
-// 					? error.message
-// 					: 'Failed to fetch journal entries for selected date'
-// 			);
-// 			// Show dialog anyway, but with empty entries
-// 			setSelectedEntries([]);
-// 			setIsDialogOpen(true);
-// 		} finally {
-// 			setIsLoading(false);
-// 		}
-// 	};
-
-// 	// Helper function to determine dot color based on mood
-// 	const getMoodColor = (mood: string): string => {
-// 		const moodColors: Record<string, string> = {
-// 			Happy: 'bg-yellow-400',
-// 			Relaxed: 'bg-green-400',
-// 			Confident: 'bg-blue-400',
-// 			Calm: 'bg-gray-400',
-// 			Content: 'bg-orange-400',
-// 			Reflective: 'bg-purple-400',
-// 			Sad: 'bg-blue-600',
-// 			Anxious: 'bg-red-500',
-// 			Frustrated: 'bg-red-700',
-// 			Bittersweet: 'bg-pink-500',
-// 			Nostalgic: 'bg-indigo-500',
-// 			Conflicted: 'bg-gray-700',
-// 		};
-
-// 		return moodColors[mood] || 'bg-gray-500';
-// 	};
-
-// 	// Handle closing the dialog
-// 	const onDialogClose = (open: boolean) => {
-// 		setIsDialogOpen(open);
-
-// 		// If dialog is closed, reset lastSelectedDate to allow reopening the same date
-// 		if (!open) {
-// 			console.log('Dialog closed, resetting lastSelectedDate');
-// 			setLastSelectedDate('');
-// 			setSelectedDate(undefined);
-// 		}
-// 	};
-
-// 	return (
-// 		<div className="flex flex-col items-center p-6">
-// 			<h2 className="text-2xl font-bold mb-6">Journal Calendar</h2>
-
-// 			{error && (
-// 				<div className="mb-4 p-3 bg-red-100 text-red-800 rounded-md">
-// 					{error}
-// 				</div>
-// 			)}
-
-// 			<div className="border rounded-md p-4 shadow-sm">
-// 				<Calendar
-// 					mode="single"
-// 					selected={selectedDate}
-// 					onSelect={handleDateSelect}
-// 					className="rounded-md"
-// 					disabled={isLoading}
-// 					modifiers={{
-// 						highlighted: highlightedDates,
-// 					}}
-// 					modifiersStyles={{
-// 						highlighted: {
-// 							fontWeight: 'bold',
-// 							textDecoration: 'underline',
-// 							backgroundColor: 'rgba(59, 130, 246, 0.1)',
-// 						},
-// 					}}
-// 				/>
-// 			</div>
-
-// 			<div className="mt-4 text-sm text-center text-gray-500">
-// 				Dates with underlines have journal entries. Click on a date to view
-// 				entries.
-// 			</div>
-
-// 			{/* Dialog to show entries for selected date */}
-// 			<Dialog open={isDialogOpen} onOpenChange={onDialogClose}>
-// 				<DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-// 					<DialogHeader>
-// 						<DialogTitle>
-// 							Journal Entries for{' '}
-// 							{selectedDate ? format(selectedDate, 'MMMM d, yyyy') : ''}
-// 						</DialogTitle>
-// 						<DialogDescription>
-// 							{selectedEntries.length > 0
-// 								? `You have ${selectedEntries.length} ${
-// 										selectedEntries.length === 1 ? 'entry' : 'entries'
-// 								  } for this date.`
-// 								: 'No journal entries for this date.'}
-// 						</DialogDescription>
-// 					</DialogHeader>
-
-// 					{selectedEntries.length > 0 ? (
-// 						<div className="space-y-4 mt-4">
-// 							{selectedEntries.map((entry) => (
-// 								<div key={entry.id} className="border rounded-md p-4">
-// 									<div className="flex items-center gap-2 mb-2">
-// 										<div
-// 											className={`w-3 h-3 rounded-full ${getMoodColor(
-// 												entry.mood
-// 											)}`}
-// 										></div>
-// 										<span className="font-medium">{entry.mood}</span>
-// 									</div>
-// 									<p className="text-sm mb-3">{entry.content}</p>
-// 									{entry.affirmation_content && (
-// 										<div className="bg-gray-100 p-3 rounded-md italic text-sm">
-// 											<span className="font-medium">Affirmation:</span>{' '}
-// 											{entry.affirmation_content}
-// 										</div>
-// 									)}
-// 								</div>
-// 							))}
-// 						</div>
-// 					) : (
-// 						<div className="text-center py-4">
-// 							<p>No journal entries found for this date.</p>
-// 							<Button
-// 								variant="outline"
-// 								className="mt-4"
-// 								onClick={() => onDialogClose(false)}
-// 							>
-// 								Close
-// 							</Button>
-// 						</div>
-// 					)}
-// 				</DialogContent>
-// 			</Dialog>
-// 		</div>
-// 	);
-// }
-
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from '@/components/ui/dialog';
-import { format } from 'date-fns';
-import { useEffect, useState } from 'react';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isToday } from 'date-fns';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { toast } from 'react-toastify';
 import { journalAPI } from '../api';
+import './journal-calendar.css';
 
 interface JournalEntry {
 	id: number;
@@ -386,387 +13,395 @@ interface JournalEntry {
 	affirmation_content: string | null;
 }
 
-// Helper function to format date as YYYY-MM-DD
-const formatDateForAPI = (date: Date): string => {
-	return format(date, 'yyyy-MM-dd');
-};
+const formatDateForAPI = (date: Date): string => format(date, 'yyyy-MM-dd');
 
-export default function JournalCalendar() {
-	const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-		new Date()
+const moodColorMap: Record<string, string> = {
+	Happy: '#E8B86D',
+	Relaxed: '#7EB5A6',
+	Confident: '#D49A6A',
+	Calm: '#7EB5A6',
+	Content: '#B5936B',
+	Reflective: '#9B8AA6',
+	Sad: '#7A8B9A',
+	Anxious: '#C4A77D',
+	Frustrated: '#C08B7E',
+	Bittersweet: '#C48FAA',
+	Nostalgic: '#8B8FAC',
+	Conflicted: '#8B9FAC',
+};
+const getMoodColor = (mood: string) => moodColorMap[mood] || '#A89683';
+
+/* ── Icons ── */
+const ChevronLeft = () => (
+	<svg viewBox="0 0 24 24" fill="none" width={16} height={16}>
+		<path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+	</svg>
+);
+
+const ChevronRight = () => (
+	<svg viewBox="0 0 24 24" fill="none" width={16} height={16}>
+		<path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+	</svg>
+);
+
+const CloseIcon = () => (
+	<svg viewBox="0 0 24 24" fill="none" width={16} height={16}>
+		<path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+	</svg>
+);
+
+const LeafIcon = () => (
+	<svg viewBox="0 0 24 24" fill="none" className="bloom-dialog-empty-icon">
+		<path d="M6 21C6 21 7 14 12 9C17 4 21 3 21 3C21 3 20 10 15 15C10 20 6 21 6 21Z"
+			stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+		<path d="M6 21C6 21 6 16 9 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+	</svg>
+);
+
+/* ─── Custom Calendar Grid ─────────────────────────────────── */
+const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+interface CalendarGridProps {
+	currentMonth: Date;
+	selectedDate: Date | undefined;
+	highlightedDates: Date[];
+	onDateClick: (date: Date) => void;
+	onPrev: () => void;
+	onNext: () => void;
+	isLoading: boolean;
+}
+
+function CalendarGrid({ currentMonth, selectedDate, highlightedDates, onDateClick, onPrev, onNext, isLoading }: CalendarGridProps) {
+	const monthStart = startOfMonth(currentMonth);
+	const monthEnd = endOfMonth(currentMonth);
+	const calStart = startOfWeek(monthStart);
+	const calEnd = endOfWeek(monthEnd);
+	const days = eachDayOfInterval({ start: calStart, end: calEnd });
+
+	const highlightedSet = new Set(highlightedDates.map(d => formatDateForAPI(d)));
+
+	return (
+		<div className="cal-wrapper">
+			{/* Header: Month nav */}
+			<div className="cal-header">
+				<button className="cal-nav-btn" onClick={onPrev} aria-label="Previous month" disabled={isLoading}>
+					<ChevronLeft />
+				</button>
+				<span className="cal-month-label">
+					{format(currentMonth, 'MMMM yyyy')}
+				</span>
+				<button className="cal-nav-btn" onClick={onNext} aria-label="Next month" disabled={isLoading}>
+					<ChevronRight />
+				</button>
+			</div>
+
+			{/* Day-of-week headers */}
+			<div className="cal-grid">
+				{DAY_LABELS.map(d => (
+					<div key={d} className="cal-dow">{d}</div>
+				))}
+
+				{/* Date cells */}
+				{days.map(day => {
+					const key = formatDateForAPI(day);
+					const inMonth = isSameMonth(day, currentMonth);
+					const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
+					const isTodayDate = isToday(day);
+					const hasEntry = highlightedSet.has(key);
+
+					let cls = 'cal-day';
+					if (!inMonth) cls += ' cal-day--outside';
+					if (isTodayDate && !isSelected) cls += ' cal-day--today';
+					if (isSelected) cls += ' cal-day--selected';
+					if (hasEntry && !isSelected) cls += ' cal-day--has-entry';
+
+					return (
+						<button
+							key={key}
+							className={cls}
+							onClick={() => inMonth && !isLoading && onDateClick(day)}
+							disabled={!inMonth || isLoading}
+							aria-label={format(day, 'MMMM d, yyyy')}
+							aria-pressed={isSelected}
+						>
+							<span className="cal-day-num">{format(day, 'd')}</span>
+							{hasEntry && <span className="cal-entry-dot" />}
+						</button>
+					);
+				})}
+			</div>
+		</div>
 	);
-	const [entriesByDate, setEntriesByDate] = useState<
-		Record<string, JournalEntry[]>
-	>({});
-	const [isLoading, setIsLoading] = useState<boolean>(true);
+}
+
+/* ─── Entry Dialog Portal ──────────────────────────────────── */
+interface DialogProps {
+	open: boolean;
+	onClose: () => void;
+	selectedDate: Date | undefined;
+	entries: JournalEntry[];
+	error: string | null;
+}
+
+function EntryDialog({ open, onClose, selectedDate, entries, error }: DialogProps) {
+	const overlayRef = useRef<HTMLDivElement>(null);
+
+	const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+		if (e.target === overlayRef.current) onClose();
+	};
+
+	useEffect(() => {
+		if (!open) return;
+		const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+		document.addEventListener('keydown', onKey);
+		return () => document.removeEventListener('keydown', onKey);
+	}, [open, onClose]);
+
+	useEffect(() => {
+		document.body.style.overflow = open ? 'hidden' : '';
+		return () => { document.body.style.overflow = ''; };
+	}, [open]);
+
+	if (!open) return null;
+
+	const dateLabel = selectedDate ? format(selectedDate, 'MMMM d, yyyy') : '';
+	const dayOfWeek = selectedDate ? format(selectedDate, 'EEEE') : '';
+
+	return createPortal(
+		<div className="bloom-dialog-overlay" ref={overlayRef} onClick={handleOverlayClick}>
+			<div className="bloom-dialog-box" role="dialog" aria-modal="true">
+				{/* Header */}
+				<div className="bloom-dialog-header">
+					<div className="bloom-dialog-header-left">
+						<span className="bloom-dialog-date-label">{dayOfWeek}</span>
+						<h2 className="bloom-dialog-title">{dateLabel}</h2>
+						{entries.length > 0 && (
+							<p className="bloom-dialog-subtitle">
+								{entries.length} {entries.length === 1 ? 'entry' : 'entries'} this day
+							</p>
+						)}
+					</div>
+					<button className="bloom-dialog-close" onClick={onClose} aria-label="Close">
+						<CloseIcon />
+					</button>
+				</div>
+
+				{/* Body */}
+				<div className="bloom-dialog-body">
+					{error && (
+						<div style={{
+							padding: '12px 16px',
+							background: '#FBF0EE',
+							border: '1px solid rgba(192,139,126,0.3)',
+							borderRadius: '10px',
+							fontFamily: 'var(--font-body)',
+							fontSize: '0.85rem',
+							color: '#9B5F53',
+						}}>
+							{error}
+						</div>
+					)}
+
+					{entries.length > 0 ? (
+						entries.map((entry) => {
+							const color = getMoodColor(entry.mood);
+							return (
+								<div
+									key={entry.id}
+									className="bloom-entry-card"
+									style={{ background: `${color}08`, borderLeft: `4px solid ${color}` }}
+								>
+									<div className="bloom-entry-card-header" style={{ background: `${color}12` }}>
+										<div className="bloom-mood-dot" style={{ background: color }} />
+										<span className="bloom-mood-label" style={{ color }}>{entry.mood}</span>
+									</div>
+									<p className="bloom-entry-content">{entry.content}</p>
+									{entry.affirmation_content && (
+										<div
+											className="bloom-affirmation-block"
+											style={{ background: `${color}10`, border: `1px solid ${color}20` }}
+										>
+											<p className="bloom-affirmation-label" style={{ color }}>Affirmation</p>
+											<p className="bloom-affirmation-text">{entry.affirmation_content}</p>
+										</div>
+									)}
+								</div>
+							);
+						})
+					) : (
+						<div className="bloom-dialog-empty">
+							<LeafIcon />
+							<p className="bloom-dialog-empty-text">No entries for this day</p>
+							<p className="bloom-dialog-empty-hint">
+								Select a day with a dot below the date to view your entries
+							</p>
+							<button className="bloom-dialog-empty-btn" onClick={onClose}>Got it</button>
+						</div>
+					)}
+				</div>
+			</div>
+		</div>,
+		document.body
+	);
+}
+
+/* ─── JournalCalendar ─────────────────────────────────────── */
+export default function JournalCalendar() {
+	const [currentMonth, setCurrentMonth] = useState(new Date());
+	const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+	const [entriesByDate, setEntriesByDate] = useState<Record<string, JournalEntry[]>>({});
+	const [isLoading, setIsLoading] = useState(true);
 	const [selectedEntries, setSelectedEntries] = useState<JournalEntry[]>([]);
-	const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [highlightedDates, setHighlightedDates] = useState<Date[]>([]);
-	const [lastSelectedDate, setLastSelectedDate] = useState<string>('');
-	const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+	const [lastSelectedDate, setLastSelectedDate] = useState('');
+	const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-	// Check authentication status and get entries on component mount
 	useEffect(() => {
 		const token = localStorage.getItem('token');
-		if (token) {
-			setIsAuthenticated(true);
-			fetchAllEntries();
-		} else {
-			setIsAuthenticated(false);
-			setIsLoading(false);
-			setError('Please log in to view your journal entries');
-		}
+		if (token) { setIsAuthenticated(true); fetchAllEntries(); }
+		else { setIsAuthenticated(false); setIsLoading(false); }
 	}, []);
 
-	// Fetch all journal entries for the user
 	const fetchAllEntries = async () => {
 		setIsLoading(true);
 		setError(null);
-
 		try {
-			// Use the journalAPI service to get all entries
 			const entries = await journalAPI.getAllEntries();
-			console.log('Fetched entries:', entries);
-
-			// If no entries returned or not an array, handle appropriately
 			if (!entries || !Array.isArray(entries)) {
-				console.log('No entries returned or invalid response format');
-				setEntriesByDate({});
-				setHighlightedDates([]);
-				setIsLoading(false);
-				return;
+				setEntriesByDate({}); setHighlightedDates([]); return;
 			}
-
-			// Group entries by date
-			const groupedEntries: Record<string, JournalEntry[]> = {};
-			const datesToHighlight: Date[] = [];
-
+			const grouped: Record<string, JournalEntry[]> = {};
+			const toHighlight: Date[] = [];
 			entries.forEach((entry: any) => {
-				// Extract date string from entry
-				let dateStr = '';
-				if (entry.entry_date) {
-					dateStr = entry.entry_date.split('T')[0];
-				} else if (entry.created_at) {
-					dateStr = entry.created_at.split('T')[0];
-				} else {
-					// If no date found, use current date as fallback
-					dateStr = new Date().toISOString().split('T')[0];
-					console.warn('No date field found for entry:', entry);
-				}
-
-				// Create standardized entry
-				const standardizedEntry: JournalEntry = {
-					id: entry.id,
-					content: entry.content || '',
-					mood: entry.mood || '',
-					entry_date: dateStr,
-					affirmation_content: entry.affirmation_content || null,
-				};
-
-				// Add to grouped entries and highlight dates
-				if (!groupedEntries[dateStr]) {
-					groupedEntries[dateStr] = [];
-					const highlightDate = new Date(`${dateStr}T12:00:00`);
-					datesToHighlight.push(highlightDate);
-				}
-				groupedEntries[dateStr].push(standardizedEntry);
-			});
-
-			setEntriesByDate(groupedEntries);
-			setHighlightedDates(datesToHighlight);
-
-			// If user selected a date, check if it has entries and show dialog
-			if (selectedDate) {
-				const formattedDate = formatDateForAPI(selectedDate);
-				if (groupedEntries[formattedDate]?.length > 0) {
-					setSelectedEntries(groupedEntries[formattedDate]);
-					setIsDialogOpen(true);
-					setLastSelectedDate(formattedDate);
-				}
-			}
-		} catch (error) {
-			console.error('Error fetching entries:', error);
-
-			// Handle authentication errors
-			if (
-				error instanceof Error &&
-				(error.message.includes('token') ||
-					error.message.includes('401') ||
-					error.message.includes('403'))
-			) {
-				setIsAuthenticated(false);
-				setError('Authentication failed. Please log in again.');
-
-				// Clear token as it's invalid
-				localStorage.removeItem('token');
-
-				toast.error('Your session has expired. Please log in again.', {
-					position: 'top-right',
-				});
-			} else {
-				setError(
-					error instanceof Error
-						? error.message
-						: 'Failed to fetch journal entries'
-				);
-			}
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
-	// Handle date selection
-	const handleDateSelect = async (date: Date | undefined) => {
-		if (!date) return;
-
-		// Check authentication first
-		if (!isAuthenticated) {
-			toast.error('Please log in to view your journal entries', {
-				position: 'top-right',
-			});
-			return;
-		}
-
-		const formattedDate = formatDateForAPI(date);
-		console.log('Selected date:', formattedDate);
-
-		// Always update the selected date
-		setSelectedDate(date);
-
-		// If selecting the same date again, just open the dialog with existing entries
-		if (formattedDate === lastSelectedDate && !isDialogOpen) {
-			setIsDialogOpen(true);
-			return;
-		}
-
-		// Update the last selected date
-		setLastSelectedDate(formattedDate);
-
-		// If we already have entries for this date, use them
-		if (entriesByDate[formattedDate]) {
-			setSelectedEntries(entriesByDate[formattedDate]);
-			setIsDialogOpen(true);
-			return;
-		}
-
-		// Otherwise, fetch entries for this date
-		setIsLoading(true);
-		setError(null);
-
-		try {
-			const entries = await journalAPI.getEntriesByDate(formattedDate);
-
-			// Handle no entries or invalid response
-			if (!entries || !Array.isArray(entries)) {
-				setSelectedEntries([]);
-				setIsDialogOpen(true);
-				return;
-			}
-
-			// Standardize entries
-			const standardizedEntries: JournalEntry[] = entries.map((entry: any) => {
-				// Determine the date string
 				const dateStr = entry.entry_date
 					? entry.entry_date.split('T')[0]
-					: formattedDate;
-
-				return {
+					: entry.created_at
+						? entry.created_at.split('T')[0]
+						: new Date().toISOString().split('T')[0];
+				const std: JournalEntry = {
 					id: entry.id,
 					content: entry.content || '',
 					mood: entry.mood || '',
 					entry_date: dateStr,
 					affirmation_content: entry.affirmation_content || null,
 				};
+				if (!grouped[dateStr]) {
+					grouped[dateStr] = [];
+					toHighlight.push(new Date(`${dateStr}T12:00:00`));
+				}
+				grouped[dateStr].push(std);
 			});
-
-			// If entries found, add to highlighted dates
-			if (standardizedEntries.length > 0) {
-				const highlightDate = new Date(`${formattedDate}T12:00:00`);
-				setHighlightedDates((prev) => {
-					// Avoid duplicates
-					if (!prev.some((d) => formatDateForAPI(d) === formattedDate)) {
-						return [...prev, highlightDate];
-					}
-					return prev;
-				});
-
-				// Update entries by date
-				setEntriesByDate((prev) => ({
-					...prev,
-					[formattedDate]: standardizedEntries,
-				}));
-			}
-
-			setSelectedEntries(standardizedEntries);
-			setIsDialogOpen(true);
-		} catch (error) {
-			console.error('Error fetching entries for date:', error);
-
-			// Handle authentication errors
-			if (
-				error instanceof Error &&
-				(error.message.includes('token') ||
-					error.message.includes('401') ||
-					error.message.includes('403'))
-			) {
+			setEntriesByDate(grouped);
+			setHighlightedDates(toHighlight);
+		} catch (err) {
+			if (err instanceof Error && (err.message.includes('401') || err.message.includes('403'))) {
 				setIsAuthenticated(false);
-				toast.error('Your session has expired. Please log in again.', {
-					position: 'top-right',
-				});
-
-				// Show empty entries but with auth error
-				setSelectedEntries([]);
-				setError('Authentication failed. Please log in again.');
-			} else {
-				setError(
-					error instanceof Error
-						? error.message
-						: 'Failed to fetch journal entries for selected date'
-				);
-
-				// Show dialog anyway, but with empty entries
-				setSelectedEntries([]);
+				localStorage.removeItem('token');
+				toast.error('Session expired. Please log in again.', { position: 'top-right' });
 			}
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
+	const handleDateClick = async (date: Date) => {
+		if (!isAuthenticated) {
+			toast.error('Please log in to view your entries', { position: 'top-right' });
+			return;
+		}
+		const fd = formatDateForAPI(date);
+		setSelectedDate(date);
+
+		if (fd === lastSelectedDate && !isDialogOpen) {
+			setIsDialogOpen(true);
+			return;
+		}
+		setLastSelectedDate(fd);
+
+		if (entriesByDate[fd]) {
+			setSelectedEntries(entriesByDate[fd]);
+			setIsDialogOpen(true);
+			return;
+		}
+
+		setIsLoading(true);
+		setError(null);
+		try {
+			const entries = await journalAPI.getEntriesByDate(fd);
+			const std: JournalEntry[] = Array.isArray(entries)
+				? entries.map((e: any) => ({
+					id: e.id,
+					content: e.content || '',
+					mood: e.mood || '',
+					entry_date: e.entry_date ? e.entry_date.split('T')[0] : fd,
+					affirmation_content: e.affirmation_content || null,
+				}))
+				: [];
+			if (std.length > 0) {
+				setHighlightedDates(prev =>
+					prev.some(d => formatDateForAPI(d) === fd) ? prev : [...prev, new Date(`${fd}T12:00:00`)]
+				);
+				setEntriesByDate(prev => ({ ...prev, [fd]: std }));
+			}
+			setSelectedEntries(std);
+			setIsDialogOpen(true);
+		} catch (err) {
+			if (err instanceof Error && (err.message.includes('401') || err.message.includes('403'))) {
+				setIsAuthenticated(false);
+				toast.error('Session expired. Please log in again.', { position: 'top-right' });
+			}
+			setSelectedEntries([]);
 			setIsDialogOpen(true);
 		} finally {
 			setIsLoading(false);
 		}
 	};
 
-	// Helper function to determine dot color based on mood
-	const getMoodColor = (mood: string): string => {
-		const moodColors: Record<string, string> = {
-			Happy: 'bg-yellow-400',
-			Relaxed: 'bg-green-400',
-			Confident: 'bg-blue-400',
-			Calm: 'bg-gray-400',
-			Content: 'bg-orange-400',
-			Reflective: 'bg-purple-400',
-			Sad: 'bg-blue-600',
-			Anxious: 'bg-red-500',
-			Frustrated: 'bg-red-700',
-			Bittersweet: 'bg-pink-500',
-			Nostalgic: 'bg-indigo-500',
-			Conflicted: 'bg-gray-700',
-		};
-
-		return moodColors[mood] || 'bg-gray-500';
+	const closeDialog = () => {
+		setIsDialogOpen(false);
+		setLastSelectedDate('');
+		setSelectedDate(undefined);
 	};
 
-	// Handle dialog close
-	const onDialogClose = (open: boolean) => {
-		setIsDialogOpen(open);
-		if (!open) {
-			setLastSelectedDate('');
-			setSelectedDate(undefined);
-		}
-	};
-
-	// If loading, show spinner
+	/* Loading spinner */
 	if (isLoading && Object.keys(entriesByDate).length === 0) {
 		return (
-			<div className="flex justify-center p-6">
-				Loading your journal entries...
+			<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px', gap: '12px' }}>
+				<div style={{
+					width: 24, height: 24, borderRadius: '50%',
+					border: '2px solid var(--bloom-accent)',
+					borderTopColor: 'transparent',
+					animation: 'spin 0.8s linear infinite',
+				}} />
+				<style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+				<span style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
+					Loading entries…
+				</span>
 			</div>
 		);
 	}
 
 	return (
-		<div className="flex flex-col items-center p-6">
-			<h2 className="text-2xl font-bold mb-6">Journal Calendar</h2>
+		<>
+			<CalendarGrid
+				currentMonth={currentMonth}
+				selectedDate={selectedDate}
+				highlightedDates={highlightedDates}
+				onDateClick={handleDateClick}
+				onPrev={() => setCurrentMonth(m => subMonths(m, 1))}
+				onNext={() => setCurrentMonth(m => addMonths(m, 1))}
+				isLoading={isLoading}
+			/>
 
-			{error && (
-				<div className="mb-4 p-3 bg-red-100 text-red-800 rounded-md">
-					{error}
-				</div>
-			)}
-
-			<div className="border rounded-md p-4 shadow-sm">
-				<Calendar
-					mode="single"
-					selected={selectedDate}
-					onSelect={handleDateSelect}
-					className="rounded-md"
-					disabled={isLoading}
-					modifiers={{
-						highlighted: highlightedDates,
-					}}
-					modifiersStyles={{
-						highlighted: {
-							fontWeight: 'bold',
-							textDecoration: 'underline',
-							backgroundColor: 'rgba(59, 130, 246, 0.1)',
-						},
-					}}
-				/>
-			</div>
-
-			<div className="mt-4 text-sm text-center text-gray-500">
-				Dates with underlines have journal entries. Click on a date to view
-				entries.
-			</div>
-
-			{/* Dialog to show entries for selected date */}
-			<Dialog open={isDialogOpen} onOpenChange={onDialogClose}>
-				<DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-					<DialogHeader>
-						<DialogTitle>
-							Journal Entries for{' '}
-							{selectedDate ? format(selectedDate, 'MMMM d, yyyy') : ''}
-						</DialogTitle>
-						<DialogDescription>
-							{selectedEntries.length > 0
-								? `You have ${selectedEntries.length} ${
-										selectedEntries.length === 1 ? 'entry' : 'entries'
-								  } for this date.`
-								: 'No journal entries for this date.'}
-						</DialogDescription>
-					</DialogHeader>
-
-					{error && (
-						<div className="mb-4 p-3 bg-red-100 text-red-800 rounded-md">
-							{error}
-						</div>
-					)}
-
-					{selectedEntries.length > 0 ? (
-						<div className="space-y-4 mt-4">
-							{selectedEntries.map((entry) => (
-								<div key={entry.id} className="border rounded-md p-4">
-									<div className="flex items-center gap-2 mb-2">
-										<div
-											className={`w-3 h-3 rounded-full ${getMoodColor(
-												entry.mood
-											)}`}
-										></div>
-										<span className="font-medium">{entry.mood}</span>
-									</div>
-									<p className="text-sm mb-3">{entry.content}</p>
-									{entry.affirmation_content && (
-										<div className="bg-gray-100 p-3 rounded-md italic text-sm">
-											<span className="font-medium">Affirmation:</span>{' '}
-											{entry.affirmation_content}
-										</div>
-									)}
-								</div>
-							))}
-						</div>
-					) : (
-						<div className="text-center py-4">
-							<p>No journal entries found for this date.</p>
-							<Button
-								variant="outline"
-								className="mt-4"
-								onClick={() => onDialogClose(false)}
-							>
-								Close
-							</Button>
-						</div>
-					)}
-				</DialogContent>
-			</Dialog>
-		</div>
+			<EntryDialog
+				open={isDialogOpen}
+				onClose={closeDialog}
+				selectedDate={selectedDate}
+				entries={selectedEntries}
+				error={error}
+			/>
+		</>
 	);
 }

@@ -3,73 +3,80 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ─── Design System Token Overrides ────────────────────────── */
+
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+
+  --background: 239 232 218;      /* --surface-base */
+  --foreground: 26 20 16;         /* --text-primary */
+  --card: 250 247 242;
+  --card-foreground: 26 20 16;
+  --popover: 250 247 242;
+  --popover-foreground: 26 20 16;
+
+  --primary: 124 106 86;
+  --primary-foreground: 250 247 242;
+
+  --secondary: 227 216 200;
+  --secondary-foreground: 74 61 50;
+
+  --muted: 227 216 200;
+  --muted-foreground: 132 112 96;
+
+  --accent: 200 144 60;
+  --accent-foreground: 78 61 46;
+
+  --destructive: 184 104 88;
+  --destructive-foreground: 250 247 242;
+
+  --border: 124 106 86;
+  --input: 124 106 86;
+  --ring: 200 144 60;
+
+  --chart-1: 232 168 74;
+  --chart-2: 91 168 152;
+  --chart-3: 155 126 192;
+  --chart-4: 200 122 60;
+  --chart-5: 160 120 64;
+
+  --sidebar: 239 232 218;
+  --sidebar-foreground: 26 20 16;
+  --sidebar-primary: 124 106 86;
+  --sidebar-primary-foreground: 250 247 242;
+  --sidebar-accent: 235 201 144;
+  --sidebar-accent-foreground: 78 61 46;
+  --sidebar-border: 124 106 86;
+  --sidebar-ring: 200 144 60;
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --background: 22 18 16;
+  --foreground: 240 232 220;
+  --card: 32 27 23;
+  --card-foreground: 240 232 220;
+  --popover: 32 27 23;
+  --popover-foreground: 240 232 220;
+  --primary: 196 160 122;
+  --primary-foreground: 32 27 23;
+  --secondary: 42 35 28;
+  --secondary-foreground: 192 173 151;
+  --muted: 42 35 28;
+  --muted-foreground: 122 108 94;
+  --accent: 224 154 69;
+  --accent-foreground: 240 232 220;
+  --destructive: 208 128 112;
+  --border: 255 255 255 / 10%;
+  --input: 255 255 255 / 14%;
+  --ring: 224 154 69;
+  --sidebar: 32 27 23;
+  --sidebar-foreground: 240 232 220;
+  --sidebar-primary: 224 154 69;
+  --sidebar-primary-foreground: 32 27 23;
+  --sidebar-accent: 42 35 28;
+  --sidebar-accent-foreground: 240 232 220;
+  --sidebar-border: 255 255 255 / 10%;
+  --sidebar-ring: 224 154 69;
 }
 
 @theme inline {
@@ -116,5 +123,59 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    background-color: var(--surface-base);
+    color: var(--text-primary);
   }
+}
+
+/* ─── shadcn Calendar overrides ────────────────────────── */
+.rdp {
+  font-family: var(--font-body) !important;
+}
+
+.rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  background-color: var(--surface-sunken) !important;
+  border-radius: 8px !important;
+}
+
+.rdp-day_selected,
+.rdp-day_selected:focus-visible,
+.rdp-day_selected:hover {
+  background-color: var(--bloom-primary) !important;
+  color: var(--text-inverse) !important;
+  border-radius: 8px !important;
+}
+
+.rdp-day_today:not(.rdp-day_selected) {
+  background-color: var(--bloom-accent-glow) !important;
+  color: var(--bloom-primary-dark) !important;
+  font-weight: 600 !important;
+}
+
+/* ─── react-toastify ─────────────────────────────────────── */
+.Toastify__toast {
+  font-family: var(--font-body) !important;
+  font-size: var(--text-sm) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+  color: var(--text-primary) !important;
+  background: var(--surface-elevated) !important;
+  border: 1px solid rgba(124, 106, 86, 0.12) !important;
+}
+
+.Toastify__toast--success {
+  border-left: 4px solid var(--bloom-sage) !important;
+}
+
+.Toastify__toast--error {
+  border-left: 4px solid var(--mood-frustrated) !important;
+}
+
+.Toastify__toast--info {
+  border-left: 4px solid var(--bloom-accent) !important;
+}
+
+.Toastify__progress-bar {
+  background: var(--bloom-accent) !important;
 }
