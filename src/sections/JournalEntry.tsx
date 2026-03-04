@@ -55,7 +55,11 @@ const moodColorMap: Record<string, string> = {
 	Conflicted: '#8B9FAC',
 };
 
-export default function JournalEntry() {
+interface JournalEntryProps {
+	onEntrySaved?: () => void;
+}
+
+export default function JournalEntry({ onEntrySaved }: JournalEntryProps) {
 	const { selectedMood } = useMood();
 	const [journalEntry, setJournalEntry] = useState('');
 	const [loading, setLoading] = useState(false);
@@ -68,6 +72,11 @@ export default function JournalEntry() {
 		const token = localStorage.getItem('token');
 		setTokenStatus(token ? 'valid' : 'invalid');
 	}, []);
+
+	// Clear affirmation panel when mood changes (stale state bug)
+	useEffect(() => {
+		setShowAffirmation(false);
+	}, [selectedMood]);
 
 	const saveEntry = async () => {
 		if (!journalEntry.trim()) {
@@ -86,12 +95,16 @@ export default function JournalEntry() {
 		setLoading(true);
 		try {
 			const response = await journalAPI.createEntry(journalEntry, selectedMood);
+			setJournalEntry('');
+
 			if (response.affirmation) {
 				setAffirmation({ content: response.affirmation, mood_type: selectedMood });
 				setShowAffirmation(true);
 			}
-			setJournalEntry('');
-			toast.success('Entry saved 🌸', { position: 'top-right' });
+
+			toast.success('Entry saved!', { position: 'top-right' });
+			// Signal parent to refresh the calendar
+			onEntrySaved?.();
 		} catch (error) {
 			const msg = error instanceof Error ? error.message : 'Failed to save entry';
 			if (msg.includes('401') || msg.includes('403') || msg.includes('token')) {

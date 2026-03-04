@@ -358,6 +358,7 @@ const getGreeting = () => {
 const Home = () => {
 	const { theme, toggleTheme } = useTheme();
 	const [user, setUser] = useState<User | null>(null);
+	const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
 	const [affirmationOpen, setAffirmationOpen] = useState(false);
 	const [affirmationText, setAffirmationText] = useState<string | null>(null);
 	const [affirmationLoading, setAffirmationLoading] = useState(false);
@@ -459,7 +460,7 @@ const Home = () => {
 								<CalendarIcon /> Journal History
 							</span>
 						</div>
-						<JournalCalendar />
+						<JournalCalendar refreshKey={calendarRefreshKey} />
 					</div>
 				</motion.aside>
 
@@ -530,7 +531,7 @@ const Home = () => {
 						</div>
 
 						<div className="journal-section-card">
-							<JournalEntry />
+							<JournalEntry onEntrySaved={() => setCalendarRefreshKey(k => k + 1)} />
 						</div>
 					</MoodProvider>
 				</motion.main>
