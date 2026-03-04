@@ -3,9 +3,6 @@
 // API URL (use environment variable or fallback to deployed backend)
 const API_URL = import.meta.env.VITE_API_URL;
 
-// Log the API URL on startup
-console.log('Using API URL:', API_URL);
-
 // Helper function to get the auth token
 const getAuthHeader = () => {
 	const token = localStorage.getItem('token');
@@ -17,31 +14,21 @@ const getAuthHeader = () => {
 
 // Helper function to handle API responses
 const handleResponse = async (response: Response) => {
-	// Log response details for debugging
-	console.log(`API Response: ${response.url} - Status: ${response.status}`);
-
 	if (!response.ok) {
 		let errorMessage = `API Error: ${response.status} ${response.statusText}`;
 
 		try {
-			// Try to parse error as JSON
 			const errorData = await response.json();
 			errorMessage = errorData.error || errorMessage;
-		} catch (e) {
-			console.log('Error parsing JSON:', e);
-			// If not JSON, try to get error as text
+		} catch {
 			try {
 				const errorText = await response.text();
-				if (errorText) {
-					errorMessage = errorText;
-				}
-			} catch (textError) {
-				console.log('Error getting text:', textError);
-				// If we can't get text either, use the default error message
+				if (errorText) errorMessage = errorText;
+			} catch {
+				// use default error message
 			}
 		}
 
-		console.error(errorMessage);
 		throw new Error(errorMessage);
 	}
 
@@ -54,10 +41,8 @@ export const authAPI = {
 	register: async (
 		username: string,
 		email: string,
-		password: string
+		password: string,
 	): Promise<{ message: string }> => {
-		console.log('Registering user:', { username, email });
-
 		const response = await fetch(`${API_URL}/auth/register`, {
 			method: 'POST',
 			headers: {
@@ -72,10 +57,8 @@ export const authAPI = {
 	// Login an existing user
 	login: async (
 		email: string,
-		password: string
+		password: string,
 	): Promise<{ message: string; token: string; user: any }> => {
-		console.log('Logging in user:', { email });
-
 		const response = await fetch(`${API_URL}/auth/login`, {
 			method: 'POST',
 			headers: {
@@ -86,12 +69,10 @@ export const authAPI = {
 
 		const data = await handleResponse(response);
 
-		// Store the token in local storage for future requests
 		if (data.token) {
 			localStorage.setItem('token', data.token);
-			console.log('User logged in successfully, token saved');
 		} else {
-			console.error('Login response did not include a token');
+			throw new Error('Login response did not include a token');
 		}
 
 		return data;
@@ -100,7 +81,6 @@ export const authAPI = {
 	// Logout the current user
 	logout: () => {
 		localStorage.removeItem('token');
-		console.log('User logged out, token removed');
 	},
 };
 
@@ -108,11 +88,6 @@ export const authAPI = {
 export const journalAPI = {
 	// Create a new journal entry
 	createEntry: async (content: string, mood: string): Promise<any> => {
-		console.log('Creating journal entry:', {
-			content: content.substring(0, 20) + '...',
-			mood,
-		});
-
 		const response = await fetch(`${API_URL}/journal`, {
 			method: 'POST',
 			headers: getAuthHeader(),
@@ -124,8 +99,6 @@ export const journalAPI = {
 
 	// Get all journal entries
 	getAllEntries: async (): Promise<any[]> => {
-		console.log('Fetching all journal entries');
-
 		try {
 			const response = await fetch(`${API_URL}/journal`, {
 				method: 'GET',
@@ -141,8 +114,6 @@ export const journalAPI = {
 
 	// Get a specific journal entry
 	getEntry: async (id: number): Promise<any> => {
-		console.log('Fetching journal entry:', id);
-
 		const response = await fetch(`${API_URL}/journal/${id}`, {
 			method: 'GET',
 			headers: getAuthHeader(),
@@ -153,8 +124,6 @@ export const journalAPI = {
 
 	// Get entries by date
 	getEntriesByDate: async (date: string): Promise<any[]> => {
-		console.log('Fetching journal entries for date:', date);
-
 		try {
 			const response = await fetch(`${API_URL}/journal/date/${date}`, {
 				method: 'GET',
@@ -173,8 +142,6 @@ export const journalAPI = {
 export const affirmationAPI = {
 	// Get today's affirmation based on mood
 	getTodayAffirmation: async (mood: string): Promise<any> => {
-		console.log("Fetching today's affirmation for mood:", mood);
-
 		const response = await fetch(`${API_URL}/affirmation/today?mood=${mood}`, {
 			method: 'GET',
 			headers: getAuthHeader(),
@@ -185,8 +152,6 @@ export const affirmationAPI = {
 
 	// Get all affirmations for a specific mood
 	getMoodAffirmations: async (mood: string): Promise<any[]> => {
-		console.log('Fetching all affirmations for mood:', mood);
-
 		const response = await fetch(`${API_URL}/affirmations/${mood}`, {
 			method: 'GET',
 			headers: getAuthHeader(),
@@ -199,19 +164,12 @@ export const affirmationAPI = {
 // Simple test endpoint to check if API is reachable
 export const testAPI = async (): Promise<boolean> => {
 	try {
-		const response = await fetch(`${API_URL}/test`);
-		await handleResponse(response);
-		console.log('API connection test successful');
-		return true;
-	} catch (error) {
-		console.error('API connection test failed:', error);
+		const response = await fetch(`${API_URL.replace(/\/api$/, '')}/health`);
+		return response.ok;
+	} catch {
 		return false;
 	}
 };
 
-// Run an API test on module import
-testAPI().then((isConnected) => {
-	if (!isConnected) {
-		console.warn('WARNING: Unable to connect to API at', API_URL);
-	}
-});
+// Warm up the backend on module import (reduces cold-start latency for first real request)
+testAPI();
