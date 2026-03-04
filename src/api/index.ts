@@ -3,6 +3,26 @@
 // API URL (use environment variable or fallback to deployed backend)
 const API_URL = import.meta.env.VITE_API_URL;
 
+// Retry a fetch call once on network errors (handles Vercel cold-start races
+// where the first request arrives before the serverless function is warm and
+// gets a 502 with no CORS headers, which the browser reports as a CORS block).
+const fetchWithRetry = async (
+	input: RequestInfo | URL,
+	init?: RequestInit,
+	retries = 1,
+	delayMs = 1500,
+): Promise<Response> => {
+	try {
+		return await fetch(input, init);
+	} catch (err) {
+		if (retries > 0) {
+			await new Promise((resolve) => setTimeout(resolve, delayMs));
+			return fetchWithRetry(input, init, retries - 1, delayMs);
+		}
+		throw err;
+	}
+};
+
 // Helper function to get the auth token
 const getAuthHeader = () => {
 	const token = localStorage.getItem('token');
@@ -43,7 +63,7 @@ export const authAPI = {
 		email: string,
 		password: string,
 	): Promise<{ message: string }> => {
-		const response = await fetch(`${API_URL}/auth/register`, {
+		const response = await fetchWithRetry(`${API_URL}/auth/register`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -59,7 +79,7 @@ export const authAPI = {
 		email: string,
 		password: string,
 	): Promise<{ message: string; token: string; user: any }> => {
-		const response = await fetch(`${API_URL}/auth/login`, {
+		const response = await fetchWithRetry(`${API_URL}/auth/login`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -88,7 +108,7 @@ export const authAPI = {
 export const journalAPI = {
 	// Create a new journal entry
 	createEntry: async (content: string, mood: string): Promise<any> => {
-		const response = await fetch(`${API_URL}/journal`, {
+		const response = await fetchWithRetry(`${API_URL}/journal`, {
 			method: 'POST',
 			headers: getAuthHeader(),
 			body: JSON.stringify({ content, mood }),
@@ -100,21 +120,20 @@ export const journalAPI = {
 	// Get all journal entries
 	getAllEntries: async (): Promise<any[]> => {
 		try {
-			const response = await fetch(`${API_URL}/journal`, {
+			const response = await fetchWithRetry(`${API_URL}/journal`, {
 				method: 'GET',
 				headers: getAuthHeader(),
 			});
 
 			return handleResponse(response);
-		} catch (error) {
-			console.error('Error fetching journal entries:', error);
+		} catch {
 			return [];
 		}
 	},
 
 	// Get a specific journal entry
 	getEntry: async (id: number): Promise<any> => {
-		const response = await fetch(`${API_URL}/journal/${id}`, {
+		const response = await fetchWithRetry(`${API_URL}/journal/${id}`, {
 			method: 'GET',
 			headers: getAuthHeader(),
 		});
@@ -125,14 +144,13 @@ export const journalAPI = {
 	// Get entries by date
 	getEntriesByDate: async (date: string): Promise<any[]> => {
 		try {
-			const response = await fetch(`${API_URL}/journal/date/${date}`, {
+			const response = await fetchWithRetry(`${API_URL}/journal/date/${date}`, {
 				method: 'GET',
 				headers: getAuthHeader(),
 			});
 
 			return handleResponse(response);
-		} catch (error) {
-			console.error('Error fetching journal entries by date:', error);
+		} catch {
 			return [];
 		}
 	},
@@ -142,17 +160,20 @@ export const journalAPI = {
 export const affirmationAPI = {
 	// Get today's affirmation based on mood
 	getTodayAffirmation: async (mood: string): Promise<any> => {
-		const response = await fetch(`${API_URL}/affirmation/today?mood=${mood}`, {
-			method: 'GET',
-			headers: getAuthHeader(),
-		});
+		const response = await fetchWithRetry(
+			`${API_URL}/affirmation/today?mood=${mood}`,
+			{
+				method: 'GET',
+				headers: getAuthHeader(),
+			},
+		);
 
 		return handleResponse(response);
 	},
 
 	// Get all affirmations for a specific mood
 	getMoodAffirmations: async (mood: string): Promise<any[]> => {
-		const response = await fetch(`${API_URL}/affirmations/${mood}`, {
+		const response = await fetchWithRetry(`${API_URL}/affirmations/${mood}`, {
 			method: 'GET',
 			headers: getAuthHeader(),
 		});
